@@ -27,7 +27,6 @@ void check_invalid_inputs( char* argv[], ifstream& input_file, ofstream& output_
 	auto source = find_utf( argv[ 1 ] );
 	auto target = find_utf( argv[ 3 ] );
 
-
 	if ( source == UTF::UTF_ERROR ) {
 		error_message += "* Invalid source encoding: " + (string)argv[ 1 ] + "\n\n";
 	}
@@ -43,7 +42,7 @@ void check_invalid_inputs( char* argv[], ifstream& input_file, ofstream& output_
 	if ( !output_file.is_open() ) {
 		error_message += "* Failed to open " + (string)argv[ 4 ] + " for writing" + "\n\n";
 	}
-
+	
 	//	Meaningless to convert to the same encoding
 	if ( source == target && source != UTF::UTF_ERROR ) {
 		error_message += "* Source encoding and target encoding are equivalent\n\tSource encoding: "
@@ -184,18 +183,18 @@ void decode_utf_32( vector<unsigned int>& text, ifstream& input_file ) {
 	}
 }
 
-void read_from_file( UTF& first_type, vector<unsigned int>& input_vector, ifstream& input_file )
+void read_from_file( UTF& first_type, vector<unsigned int>& code_point, ifstream& input_file )
 {
 	try {
 		switch ( first_type ) {
 		case UTF::UTF_8:
-			decode_utf_8( input_vector, input_file );
+			decode_utf_8( code_point, input_file );
 			break;
 		case UTF::UTF_16:
-			decode_utf_16( input_vector, input_file );
+			decode_utf_16( code_point, input_file );
 			break;
 		case UTF::UTF_32:
-			decode_utf_32( input_vector, input_file );
+			decode_utf_32( code_point, input_file );
 			break;
 		}
 	}

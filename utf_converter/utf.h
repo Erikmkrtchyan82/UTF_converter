@@ -98,8 +98,9 @@ void encode_utf_16( vector<unsigned int>::iterator& begin, vector<unsigned int>:
 			auto copy = *begin - 0x10000;
 			auto high = ( copy >> 10 ) + 0xD800;
 			auto low = ( copy & 0x3FF ) + 0xDC00;
-			auto all = ( high << 16 ) | low;
-			*out = all;
+
+			*out = high;
+			*( ++out ) = low;
 		}
 		//	Needs two bytes to encode
 		else {
@@ -126,6 +127,8 @@ void write_in_file( InputIterator begin, InputIterator end, ofstream& output_fil
 template <typename InputIterator, typename OutputIterator>
 void utf_convert( InputIterator begin, InputIterator end, OutputIterator out ) {
 
+	string error_message = "Something went wrong in function \"utf_convert\"\n";
+
 	if ( typeid( typename std::iterator_traits<OutputIterator>::value_type ) == typeid( UTF_8_type ) ) {
 		encode_utf_8( begin, end, out );
 		return;
@@ -136,7 +139,7 @@ void utf_convert( InputIterator begin, InputIterator end, OutputIterator out ) {
 		}
 		catch ( string e ) {
 			throw e;
-		};
+		}
 
 		return;
 	}
@@ -144,19 +147,5 @@ void utf_convert( InputIterator begin, InputIterator end, OutputIterator out ) {
 		encode_utf_32( begin, end, out );
 		return;
 	}
-	throw "Something went wrong in function \"utf_convert\"\n";
-}
-
-//	Throws exception of type string
-//	Decoding from first type to second type
-template<typename InputIterator>
-void convert( vector<unsigned int>& text, ofstream& output_file ) {
-	vector<InputIterator> target( 4 * text.size() );
-	try {
-		utf_convert( text.begin(), text.end(), target.begin() );
-	}
-	catch ( string e ) {
-		throw e;
-	}
-	write_in_file( target.begin(), target.end(), output_file );
+	throw error_message;
 }

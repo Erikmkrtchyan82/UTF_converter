@@ -22,27 +22,33 @@ int main( int argc, char* argv[] ) {
 
 	//	For readin text from input_file
 	//	Why unsigned int? Because it can contain from 1 to 4 bytes decoded characters
-	vector<unsigned int> text;
+	vector<unsigned int> code_point;
 
 	try {
 		check_invalid_inputs( argv, input_file, output_file );
 
-		read_from_file( source_encoding, text, input_file );
+		read_from_file( source_encoding, code_point, input_file );
 
 		switch ( target_encoding ) {
 		case UTF::UTF_8:
 		{
-			convert<UTF_8_type>( text, output_file );
+			vector<UTF_8_type> target( 4 * code_point.size() );
+			utf_convert( code_point.begin(), code_point.end(), target.begin() );
+			write_in_file( target.begin(), target.end(), output_file );
 		}
 		break;
 		case UTF::UTF_16:
 		{
-			convert<UTF_16_type>( text, output_file );
+			vector<UTF_16_type> target( 2 * code_point.size() );
+			utf_convert( code_point.begin(), code_point.end(), target.begin() );
+			write_in_file( target.begin(), target.end(), output_file );
 		}
 		break;
 		case UTF::UTF_32:
 		{
-			convert<UTF_32_type>( text, output_file );
+			vector<UTF_32_type> target( code_point.size() );
+			utf_convert( code_point.begin(), code_point.end(), target.begin() );
+			write_in_file( target.begin(), target.end(), output_file );
 		}
 		break;
 		}
