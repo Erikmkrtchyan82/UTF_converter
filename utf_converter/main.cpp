@@ -6,10 +6,11 @@
 
 int main( int argc, char* argv[] ) {
 	if ( argc != 5 ) {
-		std::cout<< "* Usage: " << (string)argv[ 0 ] <<
+		std::cout << "* Usage: " << argv[ 0 ] <<
 			" <source-encoding> <source-file> <target-encoding> <target-file>\n\n";
 		return 1;
 	}
+
 	ifstream input_file( argv[ 2 ], std::ios_base::binary );
 	ofstream output_file( argv[ 4 ], std::ios_base::binary );
 
@@ -19,14 +20,14 @@ int main( int argc, char* argv[] ) {
 	auto target_encoding = find_utf( argv[ 3 ] );
 	string target_file = argv[ 4 ];
 
+	//	For readin text from input_file
+	//	Why unsigned int? Because it can contain from 1 to 4 bytes decoded characters
 	vector<unsigned int> text;
 
 	try {
-		//	Throwing all error messages
 		check_invalid_inputs( argv, input_file, output_file );
 
-
-		text = read_from_file( source_encoding, input_file );
+		read_from_file( source_encoding, text, input_file );
 
 		switch ( target_encoding ) {
 		case UTF::UTF_8:

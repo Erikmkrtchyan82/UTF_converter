@@ -60,13 +60,17 @@ void decode_utf_8( vector<unsigned int>& text, ifstream& input_file ) {
 	auto byte_count = sizeof( character );
 	string error_message = "Input file is not in UTF-8 format\n";
 
-	//	Checks, if bytes, after first byte, starts with 10(b)
+	//	Checks, if leading bits, after first byte, is 10
 	auto is_valid_utf_8 = []( const UTF_8_type& c ) {return ( ( c >> 6 ) == 0x2 ); };
 
 	while ( input_file.read( (char*)&character, byte_count ) ) {
+		//	If the number of significant bits is no more than seven, 
+		//	it means that character was encoded in one byte
 		if ( ( character >> 7 ) == 0x00 ) {
 			text.push_back( character );
 		}
+		//	If characer's leading three bits are 110,
+		//	means that character was encoded in two bytes
 		else if ( ( character >> 5 ) == 0x6 ) {
 			auto first = ( character ^ 0xC0 ) << 8;
 
@@ -81,6 +85,8 @@ void decode_utf_8( vector<unsigned int>& text, ifstream& input_file ) {
 
 			text.push_back( all );
 		}
+		//	If characer's leading four bits are 1110,
+		//	means that character was encoded in three bytes 
 		else if ( ( character >> 4 ) == 0xE ) {
 			UTF_8_type point[ 2 ];
 
@@ -93,12 +99,13 @@ void decode_utf_8( vector<unsigned int>& text, ifstream& input_file ) {
 
 			auto first = ( character ^ 0xE0 ) << 16;
 			auto second = ( point[ 0 ] ^ 0x80 ) << 2 << 8;
-			auto first_and_second = ( first | second ) >> 2;
 			auto third = ( point[ 1 ] ^ 0x80 ) << 2;
-			auto all = ( first_and_second | third ) >> 2;
+			auto all = ( ( ( first | second ) >> 2 ) | third ) >> 2;
 
 			text.push_back( all );
 		}
+		//	If characer's leading five bits are 11110,
+		//	means that character was encoded in four bytes
 		else if ( ( character >> 3 ) == 0x1E ) {
 			UTF_8_type point[ 3 ];
 
@@ -136,7 +143,10 @@ void decode_utf_16( vector<unsigned int>& text, ifstream& input_file ) {
 	auto is_valid_utf_16 = []( const UTF_16_type& c ) {return ( ( c >> 10 ) == 0x37 ); };
 
 	while ( input_file.read( (char*)( &character ), byte_count ) ) {
+		//	If first byte is'n start with 1101_10..
 		if ( ( character & 0xD800 ) != 0xD800 ) {
+			//	and if leading bit is 1
+			//	means that this character is not valid UTF-16 format
 			if ( ( character >> 15 ) == 0x1 ) {
 				throw error_message;
 			}
@@ -161,7 +171,6 @@ void decode_utf_16( vector<unsigned int>& text, ifstream& input_file ) {
 	}
 }
 
-// ...
 void decode_utf_32( vector<unsigned int>& text, ifstream& input_file ) {
 
 	UTF_32_type character;
@@ -172,11 +181,8 @@ void decode_utf_32( vector<unsigned int>& text, ifstream& input_file ) {
 	}
 }
 
-vector<unsigned int> read_from_file( UTF& first_type, ifstream& input_file )
+void read_from_file( UTF& first_type, vector<unsigned int>& input_vector, ifstream& input_file )
 {
-	//	Vector for inserting text from "reading file"
-	vector<unsigned int> input_vector;
-
 	try {
 		switch ( first_type ) {
 		case UTF::UTF_8:
@@ -184,6 +190,7 @@ vector<unsigned int> read_from_file( UTF& first_type, ifstream& input_file )
 			break;
 		case UTF::UTF_16:
 			decode_utf_16( input_vector, input_file );
+			break;
 		case UTF::UTF_32:
 			decode_utf_32( input_vector, input_file );
 			break;
@@ -192,6 +199,4 @@ vector<unsigned int> read_from_file( UTF& first_type, ifstream& input_file )
 	catch ( string e ) {
 		throw e;
 	}
-
-	return input_vector;
 }

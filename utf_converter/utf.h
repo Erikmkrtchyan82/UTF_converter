@@ -1,8 +1,8 @@
 #pragma once
 
+#include <vector>
 #include <string>
 #include <fstream>
-#include <vector>
 #include <iterator>
 
 using std::vector;
@@ -19,9 +19,7 @@ enum class UTF {
 	//	If encoding format is invalid
 	UTF_ERROR = 0,
 
-	UTF_8 = 8,
-	UTF_16 = 16,
-	UTF_32 = 32
+	UTF_8, UTF_16, UTF_32
 };
 
 UTF find_utf( const string& );
@@ -38,11 +36,11 @@ void decode_utf_16( vector<unsigned int>&, ifstream& );
 
 void decode_utf_32( vector<unsigned int>&, ifstream& );
 
-//	Throws exception of type string, about wrong text format in input file
-vector<unsigned int> read_from_file( UTF&, ifstream& );
+//	Throws exception of type string, about wrong text format in input file, using functions above
+void read_from_file( UTF&, vector<unsigned int>&, ifstream& );
 
-template<typename T>
-void encode_utf_8( vector<unsigned int>::iterator& begin, vector<unsigned int>::iterator& end, T& out ) {
+template<typename InputIterator>
+void encode_utf_8( vector<unsigned int>::iterator& begin, vector<unsigned int>::iterator& end, InputIterator& out ) {
 
 	for ( ; begin != end; ++begin, ++out ) {
 		//	Needs one byte to encode
@@ -83,8 +81,8 @@ void encode_utf_8( vector<unsigned int>::iterator& begin, vector<unsigned int>::
 }
 
 //	Throws exception of type string
-template<typename T>
-void encode_utf_16( vector<unsigned int>::iterator& begin, vector<unsigned int>::iterator& end, T& out ) {
+template<typename InputIterator>
+void encode_utf_16( vector<unsigned int>::iterator& begin, vector<unsigned int>::iterator& end, InputIterator& out ) {
 
 	for ( ; begin != end; ++begin, ++out ) {
 		if ( *begin >= 0xD800 && *begin <= 0xDFFF ) {
@@ -100,34 +98,30 @@ void encode_utf_16( vector<unsigned int>::iterator& begin, vector<unsigned int>:
 			auto high = ( copy >> 10 ) + 0xD800;
 			auto low = ( copy & 0x3FF ) + 0xDC00;
 			auto all = ( high << 16 ) | low;
-
 			*out = all;
 		}
-		//	Needs one byte to encode
+		//	Needs two bytes to encode
 		else {
 			*out = *begin;
 		}
-
 	}
 }
 
-// incomplete
-template<typename T>
-void encode_utf_32( vector<unsigned int>::iterator& begin, vector<unsigned int>::iterator& end, T& out ) {
+template<typename InputIterator>
+void encode_utf_32( vector<unsigned int>::iterator& begin, vector<unsigned int>::iterator& end, InputIterator& out ) {
 	for ( ; begin != end; ++begin, ++out ) {
 		*out = *begin;
 	}
 }
 
-template<typename T>
-void write_in_file( T begin, T end, ofstream& output_file ) {
-	for ( ; begin != end; ++begin ) {
-		//if ( *begin != 0x00 )
-		output_file.write( (char*)( &*begin ), sizeof( typename std::iterator_traits<T>::value_type ) );
+template<typename InputIterator>
+void write_in_file( InputIterator begin, InputIterator end, ofstream& output_file ) {
+	for ( ; begin != end && *begin != 0; ++begin ) {
+		output_file.write( (char*)( &*begin ), sizeof( typename std::iterator_traits<InputIterator>::value_type ) );
 	}
 }
 
-//	Throws exceptions of type string
+//	Throws exception of type string
 template <typename InputIterator, typename OutputIterator>
 void utf_convert( InputIterator begin, InputIterator end, OutputIterator out ) {
 
@@ -154,9 +148,9 @@ void utf_convert( InputIterator begin, InputIterator end, OutputIterator out ) {
 
 //	Throws exception of type string
 //	Decoding from first type to second type
-template<typename T>
-void convert( vector<unsigned int>text, ofstream& output_file ) {
-	vector<T> target( text.size() );
+template<typename InputIterator>
+void convert( vector<unsigned int>& text, ofstream& output_file ) {
+	vector<InputIterator> target( 4 * text.size() );
 	try {
 		utf_convert( text.begin(), text.end(), target.begin() );
 	}
