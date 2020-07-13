@@ -1,6 +1,8 @@
 #include "utf.h"
 #include <vector>
 #include <string>
+#include <fstream>
+#include <cctype>
 
 UTF find_utf( const string& encoding ) {
 
