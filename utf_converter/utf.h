@@ -34,6 +34,7 @@ void decode_utf_8( vector<unsigned int>&, ifstream& );
 //	Throws exception of type string, if format of text in input file is not UTF-16
 void decode_utf_16( vector<unsigned int>&, ifstream& );
 
+//	Throws exception of type string, if format of text in input file is not UTF-32
 void decode_utf_32( vector<unsigned int>&, ifstream& );
 
 //	Throws exception of type string, about wrong text format in input file, using functions above
