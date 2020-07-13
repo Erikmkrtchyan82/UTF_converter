@@ -175,8 +175,11 @@ void decode_utf_32( vector<unsigned int>& text, ifstream& input_file ) {
 
 	UTF_32_type character;
 	auto byte_count = sizeof( character );
+	string error_message = "Input file is not in UTF-32 format\n";
 
 	while ( input_file.read( (char*)&character, byte_count ) ) {
+		if ( ( character >> 16 >> 5 ) != 0 )
+			throw error_message;
 		text.push_back( character );
 	}
 }
