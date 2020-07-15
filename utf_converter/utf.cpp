@@ -3,13 +3,13 @@
 #include <string>
 #include <fstream>
 #include <cctype>
+#include <algorithm>
 
 UTF find_utf( const string& encoding ) {
 
-	string lowercase;
-	for ( auto character : encoding ) {
-		lowercase.push_back( tolower( character ) );
-	}
+	string lowercase=encoding;
+
+	for_each( lowercase.begin(), lowercase.end(), []( char& c ) {c = tolower( c ); } );
 
 	if ( !lowercase.compare( "utf-8" ) )
 		return UTF::UTF_8;
@@ -44,15 +44,9 @@ void check_invalid_inputs( char* argv[], ifstream& input_file, ofstream& output_
 	if ( !output_file.is_open() ) {
 		error_message += "* Failed to open " + (string)argv[ 4 ] + " for writing" + "\n\n";
 	}
-	
-	//	Meaningless to convert to the same encoding
-	if ( source == target && source != UTF::UTF_ERROR ) {
-		error_message += "* Source encoding and target encoding are equivalent\n\tSource encoding: "
-			+ (string)argv[ 1 ] + "\n\tTarget encoding: " + argv[ 3 ] + "\n\n";
-	}
 
 	if ( error_message.size() )
-		throw error_message;
+		throw std::invalid_argument( error_message );
 }
 
 void decode_utf_8( vector<unsigned int>& text, ifstream& input_file ) {
@@ -78,7 +72,7 @@ void decode_utf_8( vector<unsigned int>& text, ifstream& input_file ) {
 			input_file.read( (char*)&character, byte_count );
 
 			if ( !is_valid_utf_8( character ) ) {
-				throw error_message;
+				throw std::invalid_argument( error_message );
 			}
 
 			auto second = ( character ^ 0x80 ) << 2;
@@ -95,7 +89,7 @@ void decode_utf_8( vector<unsigned int>& text, ifstream& input_file ) {
 			input_file.read( (char*)( point + 1 ), byte_count );
 
 			if ( !is_valid_utf_8( point[ 0 ] ) || !is_valid_utf_8( point[ 1 ] ) ) {
-				throw error_message;
+				throw std::invalid_argument( error_message );
 			}
 
 			auto first = ( character ^ 0xE0 ) << 16;
@@ -117,7 +111,7 @@ void decode_utf_8( vector<unsigned int>& text, ifstream& input_file ) {
 			if ( !is_valid_utf_8( point[ 0 ] ) ||
 				!is_valid_utf_8( point[ 1 ] ) ||
 				!is_valid_utf_8( point[ 2 ] ) ) {
-				throw error_message;
+				throw std::invalid_argument( error_message );
 			}
 
 			auto first = ( character ^ 0xF0 ) << 16 << 8;
@@ -129,7 +123,7 @@ void decode_utf_8( vector<unsigned int>& text, ifstream& input_file ) {
 			text.push_back( all );
 		}
 		else {
-			throw error_message;
+			throw std::invalid_argument( error_message );
 		}
 	}
 }
@@ -149,7 +143,7 @@ void decode_utf_16( vector<unsigned int>& text, ifstream& input_file ) {
 			//	and if leading bit is 1
 			//	means that this character is not valid UTF-16 format
 			if ( ( character >> 15 ) == 0x1 ) {
-				throw error_message;
+				throw std::invalid_argument( error_message );
 			}
 			else {
 				text.push_back( character );
@@ -161,7 +155,7 @@ void decode_utf_16( vector<unsigned int>& text, ifstream& input_file ) {
 			input_file.read( (char*)( &character ), byte_count );
 
 			if ( !is_valid_utf_16( character ) ) {
-				throw error_message;
+				throw std::invalid_argument( error_message );
 			}
 
 			auto low = character - 0xDC00;
@@ -180,27 +174,22 @@ void decode_utf_32( vector<unsigned int>& text, ifstream& input_file ) {
 
 	while ( input_file.read( (char*)&character, byte_count ) ) {
 		if ( ( character >> 16 >> 5 ) != 0 )
-			throw error_message;
+			throw std::invalid_argument( error_message );
 		text.push_back( character );
 	}
 }
 
 void read_from_file( UTF& first_type, vector<unsigned int>& code_point, ifstream& input_file )
 {
-	try {
-		switch ( first_type ) {
-		case UTF::UTF_8:
-			decode_utf_8( code_point, input_file );
-			break;
-		case UTF::UTF_16:
-			decode_utf_16( code_point, input_file );
-			break;
-		case UTF::UTF_32:
-			decode_utf_32( code_point, input_file );
-			break;
-		}
-	}
-	catch ( string e ) {
-		throw e;
+	switch ( first_type ) {
+	case UTF::UTF_8:
+		decode_utf_8( code_point, input_file );
+		break;
+	case UTF::UTF_16:
+		decode_utf_16( code_point, input_file );
+		break;
+	case UTF::UTF_32:
+		decode_utf_32( code_point, input_file );
+		break;
 	}
 }

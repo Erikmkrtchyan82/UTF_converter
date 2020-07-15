@@ -24,20 +24,19 @@ enum class UTF {
 
 UTF find_utf( const string& );
 
-//	Throws exception of type string
+//	Throws exception
 //	If everything is okay does nothing
 void check_invalid_inputs( char* [], ifstream&, ofstream& );
 
-//	Throws exception of type string, if format of text in input file is not UTF-8
+//	Throws exception, if format of text in input file is not UTF-8
 void decode_utf_8( vector<unsigned int>&, ifstream& );
 
-//	Throws exception of type string, if format of text in input file is not UTF-16
+//	Throws exception, if format of text in input file is not UTF-16
 void decode_utf_16( vector<unsigned int>&, ifstream& );
 
-//	Throws exception of type string, if format of text in input file is not UTF-32
+//	Throws exception, if format of text in input file is not UTF-32
 void decode_utf_32( vector<unsigned int>&, ifstream& );
 
-//	Throws exception of type string, about wrong text format in input file, using functions above
 void read_from_file( UTF&, vector<unsigned int>&, ifstream& );
 
 template<typename InputIterator>
@@ -81,7 +80,7 @@ void encode_utf_8( vector<unsigned int>::iterator& begin, vector<unsigned int>::
 	}
 }
 
-//	Throws exception of type string
+//	Throws exception
 template<typename InputIterator>
 void encode_utf_16( vector<unsigned int>::iterator& begin, vector<unsigned int>::iterator& end, InputIterator& out ) {
 
@@ -90,7 +89,7 @@ void encode_utf_16( vector<unsigned int>::iterator& begin, vector<unsigned int>:
 			string error_message = "Can't convert ";
 			error_message += *begin + " to UTF-16\n";
 
-			throw error_message;
+			throw std::invalid_argument( error_message );
 		}
 		//	Needs four bytes to encode
 		if ( *begin >= 0x010000 && *begin <= 0x10FFFF )
@@ -123,7 +122,7 @@ void write_in_file( InputIterator begin, InputIterator end, ofstream& output_fil
 	}
 }
 
-//	Throws exception of type string
+//	Throws exception
 template <typename InputIterator, typename OutputIterator>
 void utf_convert( InputIterator begin, InputIterator end, OutputIterator out ) {
 
@@ -134,18 +133,12 @@ void utf_convert( InputIterator begin, InputIterator end, OutputIterator out ) {
 		return;
 	}
 	if ( typeid( typename std::iterator_traits<OutputIterator>::value_type ) == typeid( UTF_16_type ) ) {
-		try {
-			encode_utf_16( begin, end, out );
-		}
-		catch ( string e ) {
-			throw e;
-		}
-
+		encode_utf_16( begin, end, out );
 		return;
 	}
 	if ( typeid( typename std::iterator_traits<OutputIterator>::value_type ) == typeid( UTF_32_type ) ) {
 		encode_utf_32( begin, end, out );
 		return;
 	}
-	throw error_message;
+	throw std::invalid_argument( error_message );
 }

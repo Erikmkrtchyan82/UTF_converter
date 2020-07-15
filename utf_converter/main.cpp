@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <stdexcept>
 #include "utf.h"
 
 int main( int argc, char* argv[] ) {
@@ -19,7 +20,6 @@ int main( int argc, char* argv[] ) {
 
 	auto target_encoding = find_utf( argv[ 3 ] );
 	string target_file = argv[ 4 ];
-
 
 	try {
 		check_invalid_inputs( argv, input_file, output_file );
@@ -56,13 +56,13 @@ int main( int argc, char* argv[] ) {
 		break;
 		}
 	}
-	catch ( string error ) {
-		std::cerr << error << std::endl;
+	catch ( std::exception error ) {
+		std::cerr << error.what() << std::endl;
 		std::cout << "Exiting...\n\n";
-		
+
 		input_file.close();
 		output_file.close();
-		
+
 		return 1;
 	}
 
