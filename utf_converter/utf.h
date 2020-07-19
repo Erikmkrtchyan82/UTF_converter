@@ -59,7 +59,7 @@ void encode_utf_8( vector<unsigned int>::iterator begin, vector<unsigned int>::i
 			*++out = second;
 		}
 		//	Needs three bytes to encode
-		else if ( *begin <= 0x7FFF ) {
+		else if ( *begin <= 0xFFFF ) {
 			auto first = ( ( ( *begin >> 8 >> 4 ) & 0xF ) | 0xE0 );
 			auto second = ( ( ( *begin >> 6 ) & 0x3F ) | 0x80 );
 			auto third = ( *begin & 0x3F ) | 0x80;
@@ -69,7 +69,7 @@ void encode_utf_8( vector<unsigned int>::iterator begin, vector<unsigned int>::i
 			*++out = third;
 		}
 		//	Needs four bytes to encode
-		else if ( *begin <= 0xFFFF ) {
+		else if ( *begin <= 0x10FFFF ) {
 			auto first = ( ( ( *begin >> 16 >> 2 ) & 0x7 ) | 0x1E );
 			auto second = ( ( ( *begin >> 8 >> 4 ) & 0x3F ) | 0x80 );
 			auto third = ( ( ( *begin >> 6 ) & 0x3F ) | 0x80 );
