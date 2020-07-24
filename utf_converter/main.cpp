@@ -26,7 +26,7 @@ int main( int argc, char* argv[] ) {
 		check_invalid_inputs( argv, input_file, output_file );
 		convert( source_encoding, target_encoding, input_file, output_file );
 	}
-	catch ( std::exception error ) {
+	catch ( std::exception& error ) {
 		std::cerr << error.what() << std::endl;
 		std::cout << "Exiting...\n\n";
 
